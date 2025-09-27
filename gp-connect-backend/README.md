@@ -26,22 +26,52 @@ This is the backend for the GP Connect application, built with Node.js, Express,
 This project uses environment variables for sensitive information. You need to create a `.env` file in the root of the `gp-connect-backend` directory.
 
 1.  **Create `.env` file:**
-    Copy the `.env.example` file and rename it to `.env`:
-    ```bash
-    cp .env.example .env
-    ```
-
-2.  **Fill in your actual values:**
-    Open the newly created `.env` file and replace the placeholder values with your own:
+    Create a new `.env` file in the root directory with the following variables:
 
     ```
+    # Database
     MONGO_URI=mongodb+srv://<your-mongodb-username>:<your-mongodb-password>@cluster0.xxxxxx.mongodb.net/gpconnex
+    
+    # JWT Secret
     JWT_SECRET=a-very-strong-secret-key-for-jwt
+    
+    # Email Configuration (Gmail)
+    EMAIL_HOST=smtp.gmail.com
+    EMAIL_PORT=587
+    EMAIL_USER=your-email@gmail.com
+    EMAIL_PASS=your-app-password
+    
+    # Server Port
     PORT=5000
+    
+    # CORS Origin
+    CORS_ORIGIN=http://localhost:5173
     ```
+
+2.  **Email Setup (Required for Email Verification):**
+    To enable email verification, you need to configure Gmail SMTP:
+    
+    **Option 1: Gmail with App Password (Recommended)**
+    1. Go to your Google Account settings
+    2. Enable 2-Factor Authentication
+    3. Generate an App Password for this application
+    4. Use your Gmail address as `EMAIL_USER`
+    5. Use the generated App Password as `EMAIL_PASS`
+    
+    **Option 2: Other Email Providers**
+    - For SendGrid: Use `smtp.sendgrid.net` as host
+    - For Outlook: Use `smtp-mail.outlook.com` as host
+    - Update `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER`, and `EMAIL_PASS` accordingly
+
+    **Variables:**
     *   `MONGO_URI`: Your MongoDB Atlas connection string.
     *   `JWT_SECRET`: A strong, random string used for signing JWTs.
+    *   `EMAIL_HOST`: SMTP server host (Gmail: smtp.gmail.com).
+    *   `EMAIL_PORT`: SMTP server port (Gmail: 587).
+    *   `EMAIL_USER`: Your email address for sending emails.
+    *   `EMAIL_PASS`: Your email password or app password.
     *   `PORT`: The port on which the server will run (default is 5000).
+    *   `CORS_ORIGIN`: Frontend URL for CORS configuration.
 
 3.  **Start the development server:**
     ```bash
