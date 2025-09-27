@@ -9,6 +9,7 @@ const postSchema = mongoose.Schema(
     },
     caption: {
       type: String,
+      required: true,
     },
     image: {
       type: String, // Storing the path to the image

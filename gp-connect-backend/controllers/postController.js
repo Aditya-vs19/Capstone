@@ -43,7 +43,9 @@ const createPost = asyncHandler(async (req, res) => {
 // @route   GET /api/posts
 // @access  Private
 const getPosts = asyncHandler(async (req, res) => {
-  const posts = await Post.find({}).populate('userId', 'username');
+  const posts = await Post.find({})
+    .sort({ createdAt: -1 })
+    .populate('userId', 'fullName profilePic enrollment');
   res.json(posts);
 });
 
@@ -51,11 +53,40 @@ const getPosts = asyncHandler(async (req, res) => {
 // @route   GET /api/posts/user/:id
 // @access  Private
 const getUserPosts = asyncHandler(async (req, res) => {
-  const posts = await Post.find({ userId: req.params.id }).populate(
-    'userId',
-    'username'
-  );
+  const posts = await Post.find({ userId: req.params.id })
+    .sort({ createdAt: -1 })
+    .populate('userId', 'fullName profilePic enrollment');
   res.json(posts);
+});
+
+// @desc    Update a post
+// @route   PUT /api/posts/:id
+// @access  Private
+const updatePost = asyncHandler(async (req, res) => {
+  const { caption } = req.body;
+  const image = req.file ? `/uploads/${req.file.filename}` : undefined;
+
+  const post = await Post.findById(req.params.id);
+
+  if (!post) {
+    res.status(404);
+    throw new Error('Post not found');
+  }
+
+  if (post.userId.toString() !== req.user._id.toString()) {
+    res.status(401);
+    throw new Error('Not authorized to update this post');
+  }
+
+  // Update fields
+  if (caption !== undefined) post.caption = caption;
+  if (image !== undefined) post.image = image;
+
+  const updatedPost = await post.save();
+  const populatedPost = await Post.findById(updatedPost._id)
+    .populate('userId', 'fullName profilePic enrollment');
+
+  res.json(populatedPost);
 });
 
 // @desc    Delete a post
@@ -77,4 +108,4 @@ const deletePost = asyncHandler(async (req, res) => {
   }
 });
 
-export { upload, createPost, getPosts, getUserPosts, deletePost };
+export { upload, createPost, getPosts, getUserPosts, updatePost, deletePost };

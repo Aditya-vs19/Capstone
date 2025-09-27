@@ -7,7 +7,7 @@ import sendEmail from '../utils/sendEmail.js';
 // @route   POST /api/auth/register
 // @access  Public
 const registerUser = asyncHandler(async (req, res) => {
-  const { fullName, email, enrollment, password } = req.body;
+  const { fullName, email, enrollment, password, department } = req.body;
 
   // Validate enrollment number (must be exactly 7 digits)
   if (!/^\d{7}$/.test(enrollment)) {
@@ -38,6 +38,7 @@ const registerUser = asyncHandler(async (req, res) => {
     email,
     enrollment,
     password,
+    department,
     otp,
     otpExpires,
   });

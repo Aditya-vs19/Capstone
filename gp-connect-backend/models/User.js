@@ -23,6 +23,19 @@ const userSchema = mongoose.Schema(
       type: String,
       required: true,
     },
+    bio: {
+      type: String,
+      default: '',
+    },
+    profilePic: {
+      type: String,
+      default: '',
+    },
+    department: {
+      type: String,
+      required: true,
+      enum: ['Computer', 'Mechanical', 'Civil', 'Metallurgy', 'IT', 'Meta'],
+    },
     isVerified: {
       type: Boolean,
       default: false,

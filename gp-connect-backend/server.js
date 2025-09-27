@@ -5,6 +5,7 @@ import connectDB from './config/db.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 import authRoutes from './routes/authRoutes.js';
 import postRoutes from './routes/postRoutes.js';
+import profileRoutes from './routes/profileRoutes.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -30,6 +31,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/posts', postRoutes);
+app.use('/api/profile', profileRoutes);
 
 // Error Handling Middleware
 app.use(notFound);
