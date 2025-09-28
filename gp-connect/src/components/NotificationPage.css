@@ -1,0 +1,139 @@
+/* Import Dancing Script font */
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap');
+
+.notification-page {
+  background: #000000;
+  min-height: 100vh;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.brand-gradient {
+  font-size: 3rem;
+  font-weight: 800;
+  font-family: 'Dancing Script', cursive;
+  background: linear-gradient(90deg, #ffffff, #ffffff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 0.04em;
+  margin-bottom: 2.2rem;
+}
+.notification-list {
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+.notification-item {
+  display: flex;
+  align-items: center;
+  background: #000000;
+  border: 1px solid #333;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.10);
+  padding: 1.1rem 1.5rem;
+  gap: 1.2rem;
+  transition: all 0.3s ease;
+}
+.notification-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: #ffffff;
+  box-shadow: 0 0 15px rgba(255,255,255,0.2);
+}
+.notification-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #fff;
+}
+.notification-content {
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 24px;
+  padding: 3rem;
+  width: 100%;
+  max-width: 800px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 1px solid #333333;
+}
+.notification-user {
+  font-weight: 700;
+  color: #fff;
+}
+.notification-time {
+  color: #b0b0b0;
+  font-size: 0.95rem;
+  margin-top: 0.2rem;
+}
+@media (max-width: 700px) {
+  .notification-page {
+    padding: 0;
+    min-height: auto;
+    overflow-y: auto;
+    background: transparent;
+  }
+  
+  .notification-content {
+    max-width: 100%;
+    padding: 1rem;
+    border-radius: 0;
+    margin: 0;
+    background: transparent;
+    box-shadow: none;
+    border: none;
+  }
+  
+  .notification-title {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    padding: 0 1rem;
+  }
+  
+  .notification-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0 1rem;
+  }
+  
+  .notification-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .notification-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-right: 1rem;
+    object-fit: cover;
+  }
+  
+  .notification-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    box-shadow: none;
+    border: none;
+  }
+  
+  .notification-user {
+    font-weight: 600;
+    color: #ffffff;
+  }
+  
+  .notification-time {
+    font-size: 0.85rem;
+    color: #cccccc;
+  }
+} 

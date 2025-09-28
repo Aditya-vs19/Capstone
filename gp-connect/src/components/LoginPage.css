@@ -1,0 +1,223 @@
+/* Import Dancing Script font */
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap');
+body{
+  background-color: #000000;
+}
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #000000;
+  padding: 1rem;
+}
+
+.auth-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  backdrop-filter: blur(15px);
+  padding: 2rem;
+  width: 100%;
+  max-width: 400px;
+  color: #fff;
+  box-shadow: 0 0 20px rgba(255, 0, 150, 0.1);
+}
+
+.register-card {
+  max-width: 500px;
+  padding: 2.5rem;
+  border-radius: 24px;
+}
+
+.register-card .auth-input {
+  margin-bottom: 1.2rem;
+}
+
+.register-card .auth-button {
+  margin-top: 1rem;
+  padding: 0.9rem;
+  font-size: 1.1rem;
+}
+
+.auth-title {
+  font-size: 1.75rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(90deg, #ffffff, #ffffff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.auth-input {
+  background: rgba(255, 255, 255, 0.07);
+  border: none;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  color: white;
+  width: 100%;
+}
+
+.auth-input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid #ffffff;
+  box-shadow: 0 0 10px rgba(255,255,255,0.2);
+}
+.auth-input-error {
+  border: 1px solid #ff6b6b !important;
+  background: rgba(255, 107, 107, 0.1) !important;
+}
+.auth-error {
+  color: #ff6b6b;
+  font-size: 0.9rem;
+  margin-top: -0.5rem;
+  margin-bottom: 0.5rem;
+  text-align: left;
+}
+
+.auth-button {
+  background: linear-gradient(135deg, #727272, #000000);
+  border: none;
+  padding: 0.75rem;
+  border-radius: 10px;
+  color: white;
+  width: 100%;
+  font-weight: bold;
+  margin-top: 0.5rem;
+  transition: 0.3s ease;
+}
+
+.auth-button:hover {
+  background: linear-gradient(135deg, #161616, #999898);
+}
+
+.auth-footer-text {
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  color: #bbb;
+}
+
+.auth-link {
+  color: #ffffff;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: all 0.3s ease;
+}
+
+.auth-link:hover {
+  text-shadow: 0 0 10px rgba(255,255,255,0.8);
+}
+
+.forgot-password-link {
+  text-align: right;
+  margin-bottom: 1rem;
+}
+
+.forgot-password-link .auth-link {
+  font-size: 0.9rem;
+  color: #bbb;
+}
+
+.forgot-password-link .auth-link:hover {
+  color: #ffffff;
+}
+.auth-header {
+  position: absolute;
+  top: 1.5rem;
+  left: 2rem;
+}
+
+.logo-image {
+  width: 120px;
+  height: 120px;
+  border-radius: 20px;
+  object-fit: cover;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.logo-image:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
+}
+
+.brand-gradient {
+  font-size: 3rem;
+  font-weight: bold;
+  font-family: 'Dancing Script', cursive;
+  background: linear-gradient(90deg, #ffffff, #ffffff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 700px) {
+  .auth-container {
+    padding: 1rem;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .auth-card {
+    max-width: 100%;
+    width: 100%;
+    padding: 1.5rem;
+    margin: 0;
+    border-radius: 16px;
+  }
+  
+  .register-card {
+    max-width: 100%;
+    width: 100%;
+    padding: 1.5rem;
+    border-radius: 16px;
+  }
+  
+  .auth-title {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .auth-input {
+    padding: 0.8rem 1rem;
+    margin-bottom: 0.8rem;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  .auth-button {
+    padding: 0.8rem;
+    font-size: 1rem;
+    margin-top: 0.5rem;
+  }
+  
+  .auth-header {
+    position: static;
+    text-align: center;
+    margin-bottom: 1rem;
+    width: 100%;
+  }
+  
+  .brand-gradient {
+    font-size: 2.5rem;
+  }
+  
+  .auth-footer-text {
+    font-size: 0.9rem;
+    margin-top: 0.8rem;
+  }
+  
+  .auth-error {
+    font-size: 0.8rem;
+    margin-top: -0.3rem;
+    margin-bottom: 0.3rem;
+  }
+}

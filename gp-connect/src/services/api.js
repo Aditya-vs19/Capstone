@@ -1,0 +1,69 @@
+import axios from 'axios';
+
+const API = axios.create({
+  baseURL: 'http://localhost:5000/api',
+  timeout: 10000,
+});
+
+// Add auth token to requests
+API.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token'); // Assuming 'token' is where JWT is stored
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Handle response errors
+API.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Handle unauthorized access
+      localStorage.removeItem('token');
+      // Optionally redirect to login, but for now, we'll let the component handle it
+      // window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+// API functions - Updated for email verification flow
+export const authAPI = {
+  login: (credentials) => API.post('/auth/login', credentials),
+  register: (userData) => API.post('/auth/register', userData),
+  verifyOtp: (data) => API.post('/auth/verify', data),
+};
+
+export const profileAPI = {
+  getCurrentUserProfile: () => API.get('/profile/me'),
+  getUserProfile: (userId) => API.get(`/profile/${userId}`),
+  updateProfile: (userId, data) => API.put(`/profile/${userId}`, data),
+  uploadProfilePicture: (userId, formData) => API.post(`/profile/${userId}/upload`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  changePassword: (userId, data) => API.put(`/profile/${userId}/password`, data),
+};
+
+export const postsAPI = {
+  getPosts: () => API.get('/posts'),
+  createPost: (data) => API.post('/posts', data),
+  getUserPosts: (userId) => API.get(`/posts/user/${userId}`),
+  updatePost: (postId, data) => API.put(`/posts/${postId}`, data),
+  deletePost: (postId) => API.delete(`/posts/${postId}`),
+};
+
+// Placeholder for other APIs, assuming they will be implemented later
+export const communitiesAPI = {
+  getCommunities: () => API.get('/communities/'),
+};
+
+export const messagesAPI = {
+  getConversations: () => API.get('/messages/conversations/'),
+};
+
+export const notificationsAPI = {
+  getNotifications: () => API.get('/notifications/'),
+};
+
+export default API; 
