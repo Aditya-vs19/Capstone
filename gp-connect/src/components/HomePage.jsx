@@ -9,6 +9,7 @@ import CreatePage from './CreatePage';
 import './HomePage.css';
 import { FaHome, FaBell, FaEnvelope, FaUser, FaCog, FaSignOutAlt, FaSearch, FaUsers, FaPlus, FaArrowLeft } from 'react-icons/fa';
 import { profileAPI } from '../services/api';
+import { getProfilePicUrl, handleImageError } from '../utils/imageUtils.js';
 
 export default function HomePage({ onLogout }) {
   const [showSettings, setShowSettings] = useState(false);
@@ -318,12 +319,10 @@ export default function HomePage({ onLogout }) {
               <div key={user._id} className="search-result-user-card">
                 <div className="search-user-avatar-section" onClick={() => handleUserClick(user)}>
                   <img
-                    src={user.profilePic ? `http://localhost:5000${user.profilePic}` : '/default-avatar.svg'}
+                    src={getProfilePicUrl(user.profilePic)}
                     alt="Profile"
                     className="search-user-avatar-img"
-                    onError={(e) => {
-                      e.target.src = '/default-avatar.svg';
-                    }}
+                    onError={(e) => handleImageError(e, '/default-avatar.svg')}
                   />
                 </div>
                 <div className="search-user-details" onClick={() => handleUserClick(user)}>
@@ -415,11 +414,9 @@ export default function HomePage({ onLogout }) {
                       >
                         <div className="search-user-avatar">
                           <img
-                            src={user.profilePic ? `http://localhost:5000${user.profilePic}` : '/default-avatar.svg'}
+                            src={getProfilePicUrl(user.profilePic)}
                             alt="Profile"
-                            onError={(e) => {
-                              e.target.src = '/default-avatar.svg';
-                            }}
+                            onError={(e) => handleImageError(e, '/default-avatar.svg')}
                           />
                         </div>
                         <div className="search-user-info">

@@ -96,16 +96,29 @@ npm run dev
 # Should show: Local: http://localhost:3000
 ```
 
-### **Step 6: Verify Setup**
+### **Step 6: Set Up Images (Important!)**
+
+```bash
+# Run the image setup script to create uploads directory
+node setup-images.js
+```
+
+This script will:
+- Create the `uploads` directory in the backend
+- Add sample placeholder images
+- Set up proper image handling
+
+### **Step 7: Verify Setup**
 
 1. **Open browser** and go to `http://localhost:3000`
 2. **Register a new account** or login
 3. **Test key features:**
-   - ✅ Create a post
+   - ✅ Create a post with image
    - ✅ Search for users
    - ✅ Follow/unfollow users
    - ✅ View profiles
    - ✅ Upload profile picture
+   - ✅ Verify images display correctly
 
 ## 🔧 **Configuration Details**
 
@@ -174,6 +187,17 @@ echo "JWT_SECRET=your_secure_secret_here" >> .env
 # Verify API base URL in frontend matches backend
 ```
 
+### **Issue 6: Images Not Showing**
+```bash
+# Error: Post images or profile pictures not displaying
+# Solution: 
+# 1. Run the image setup script: node setup-images.js
+# 2. Check if uploads directory exists: gp-connect-backend/uploads/
+# 3. Verify backend serves static files from /uploads route
+# 4. Create some posts to generate real images
+# 5. Check browser console for 404 errors on image requests
+```
+
 ## 📱 **Testing Checklist**
 
 ### **Backend Tests:**
@@ -191,6 +215,8 @@ echo "JWT_SECRET=your_secure_secret_here" >> .env
 - [ ] Follow/unfollow works
 - [ ] Profile editing works
 - [ ] Post creation works
+- [ ] Images display correctly (profile pics and post images)
+- [ ] Image fallbacks work when images are missing
 
 ### **Integration Tests:**
 - [ ] User registration creates account

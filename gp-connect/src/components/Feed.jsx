@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './Feed.css';
 import { postsAPI } from '../services/api';
+import { getProfilePicUrl, getPostImageUrl, handleImageError } from '../utils/imageUtils.js';
 
 export const getFeeds = async () => {
   try {
@@ -194,13 +195,10 @@ export default function Feed({ onNavigateToProfile }) {
               <div className="avatar">
                 {user.profilePic ? (
                   <img 
-                    src={`http://localhost:5000${user.profilePic}`} 
+                    src={getProfilePicUrl(user.profilePic)} 
                     alt="Profile" 
                     style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'block';
-                    }}
+                    onError={(e) => handleImageError(e, '/default-avatar.svg')}
                   />
                 ) : null}
                 <span style={{ display: user.profilePic ? 'none' : 'block' }}>
@@ -216,7 +214,12 @@ export default function Feed({ onNavigateToProfile }) {
               </span>
             </div>
             {post.image && (
-              <img src={`http://localhost:5000${post.image}`} alt={post.caption} className="post-img" />
+              <img 
+                src={getPostImageUrl(post.image)} 
+                alt={post.caption} 
+                className="post-img"
+                onError={(e) => handleImageError(e, 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIG5vdCBhdmFpbGFibGU8L3RleHQ+PC9zdmc+')}
+              />
             )}
             <div className="post-body">
               <p>

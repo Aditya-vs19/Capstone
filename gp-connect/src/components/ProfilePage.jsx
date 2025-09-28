@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaUser, FaEdit, FaCog, FaArrowLeft, FaEnvelope, FaGraduationCap, FaBuilding, FaCalendarAlt, FaSave, FaTimes } from 'react-icons/fa';
 import { profileAPI, postsAPI } from '../services/api';
+import { getProfilePicUrl, getPostImageUrl, handleImageError } from '../utils/imageUtils.js';
 import './ProfilePage.css';
 
 const ProfilePage = ({ userProfile, onBackToHome, onNavigateToSettings, isMobile }) => {
@@ -57,7 +58,7 @@ const ProfilePage = ({ userProfile, onBackToHome, onNavigateToSettings, isMobile
             bio: loggedInUser.bio || '',
             department: loggedInUser.department || '',
           });
-          setProfilePicPreview(loggedInUser.profilePic ? `http://localhost:5000${loggedInUser.profilePic}` : null);
+          setProfilePicPreview(getProfilePicUrl(loggedInUser.profilePic));
         }
       } catch (err) {
         setError(err.message);
@@ -120,7 +121,7 @@ const ProfilePage = ({ userProfile, onBackToHome, onNavigateToSettings, isMobile
       
       // Update profile picture preview with the new URL
       if (updatedResponse.data.user.profilePic) {
-        setProfilePicPreview(`http://localhost:5000${updatedResponse.data.user.profilePic}`);
+        setProfilePicPreview(getProfilePicUrl(updatedResponse.data.user.profilePic));
       } else {
         setProfilePicPreview(null);
       }
@@ -227,12 +228,10 @@ const ProfilePage = ({ userProfile, onBackToHome, onNavigateToSettings, isMobile
           <div className="profile-header-section">
             <div className="profile-picture-container">
               <img
-                src={profilePicPreview || (displayUser?.profilePic ? `http://localhost:5000${displayUser.profilePic}` : '/default-avatar.svg')}
+                src={profilePicPreview || getProfilePicUrl(displayUser?.profilePic)}
                 alt="Profile"
                 className="profile-picture"
-                onError={(e) => {
-                  e.target.src = '/default-avatar.svg';
-                }}
+                onError={(e) => handleImageError(e, '/default-avatar.svg')}
               />
               {isOwnProfile && isEditing && (
                 <div className="profile-pic-upload">
@@ -391,12 +390,10 @@ const ProfilePage = ({ userProfile, onBackToHome, onNavigateToSettings, isMobile
                     <div className="post-header">
                       <div className="post-user-info">
                         <img
-                          src={post.userId.profilePic ? `http://localhost:5000${post.userId.profilePic}` : '/default-avatar.svg'}
+                          src={getProfilePicUrl(post.userId.profilePic)}
                           alt="Profile"
                           className="post-user-avatar"
-                          onError={(e) => {
-                            e.target.src = '/default-avatar.svg';
-                          }}
+                          onError={(e) => handleImageError(e, '/default-avatar.svg')}
                         />
                         <div>
                           <h5>{post.userId.fullName}</h5>
@@ -410,7 +407,7 @@ const ProfilePage = ({ userProfile, onBackToHome, onNavigateToSettings, isMobile
                       {post.image && (
                         <div className="post-image">
                           <img 
-                            src={`http://localhost:5000${post.image}`} 
+                            src={getPostImageUrl(post.image)} 
                             alt="Post" 
                           />
                         </div>
