@@ -9,6 +9,7 @@ export default function CreatePage() {
   const [imagePreview, setImagePreview] = useState(null);
   const [privacy, setPrivacy] = useState('public');
   const [isPosting, setIsPosting] = useState(false);
+  const [postMessage, setPostMessage] = useState({ type: '', text: '' });
 
   const handleImageSelect = (event) => {
     const file = event.target.files[0];
@@ -27,11 +28,12 @@ export default function CreatePage() {
 
   const handlePost = async () => {
     if (!postText.trim() && !selectedImage) {
-      alert('Please add some text or an image to your post');
+      setPostMessage({ type: 'error', text: 'Please add some text or an image to your post' });
       return;
     }
 
     setIsPosting(true);
+    setPostMessage({ type: '', text: '' });
     
     const formData = new FormData();
     formData.append('caption', postText);
@@ -50,10 +52,23 @@ export default function CreatePage() {
       setPrivacy('public');
       setIsPosting(false);
       
-      alert('Post created successfully!');
+      setPostMessage({ type: 'success', text: 'Post created successfully!' });
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setPostMessage({ type: '', text: '' });
+      }, 3000);
+
+      // Refresh the page to show the new post in the feed
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch (error) {
       console.error('Error creating post:', error);
-      alert('Failed to create post. Please try again.');
+      setPostMessage({ 
+        type: 'error', 
+        text: error.response?.data?.message || 'Failed to create post. Please try again.' 
+      });
       setIsPosting(false);
     }
   };
@@ -73,6 +88,12 @@ export default function CreatePage() {
         </div>
 
         <div className="create-form">
+          {postMessage.text && (
+            <div className={`post-message ${postMessage.type}`}>
+              {postMessage.text}
+            </div>
+          )}
+          
           <div className="post-input-section">
             <textarea
               className="post-textarea"

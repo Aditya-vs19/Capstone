@@ -18,6 +18,9 @@ export default function HomePage({ onLogout }) {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 700);
   const [viewingUserProfile, setViewingUserProfile] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  const [topSearchResults, setTopSearchResults] = useState([]);
+  const [showTopSearchDropdown, setShowTopSearchDropdown] = useState(false);
+  const [isTopSearching, setIsTopSearching] = useState(false);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 700);
@@ -32,15 +35,107 @@ export default function HomePage({ onLogout }) {
         setCurrentUser(response.data.user);
       } catch (error) {
         console.error('Error fetching current user:', error);
+        // If there's an authentication error, redirect to login
+        if (error.response?.status === 401) {
+          localStorage.removeItem('token');
+          window.location.reload();
+        }
       }
     };
 
     fetchCurrentUser();
   }, []);
 
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
+  const handleSearchChange = async (e) => {
+    const query = e.target.value;
+    setSearchTerm(query);
+    
+    // Clear previous timeout
+    if (window.searchTimeout) {
+      clearTimeout(window.searchTimeout);
+    }
+    
+    if (query.trim().length >= 2) {
+      // Debounce the search to avoid too many API calls
+      window.searchTimeout = setTimeout(async () => {
+        setIsTopSearching(true);
+        try {
+          const response = await profileAPI.searchUsers(query.trim());
+          setTopSearchResults(response.data || []);
+          setShowTopSearchDropdown(true);
+        } catch (error) {
+          console.error('Search error:', error);
+          setTopSearchResults([]);
+          setShowTopSearchDropdown(false);
+        } finally {
+          setIsTopSearching(false);
+        }
+      }, 300); // 300ms delay
+    } else {
+      setTopSearchResults([]);
+      setShowTopSearchDropdown(false);
+    }
   };
+
+  const handleTopSearchUserClick = async (user) => {
+    try {
+      const response = await profileAPI.getUserProfile(user._id);
+      setViewingUserProfile(response.data.user);
+      setActiveTab('profile');
+      setShowTopSearchDropdown(false);
+      setSearchTerm('');
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
+  };
+
+  const handleTopSearchFollowToggle = async (userId, isCurrentlyFollowing) => {
+    try {
+      if (isCurrentlyFollowing) {
+        await profileAPI.unfollowUser(userId);
+      } else {
+        await profileAPI.followUser(userId);
+      }
+      
+      // Update the search results to reflect the change
+      setTopSearchResults(prev => 
+        prev.map(user => 
+          user._id === userId 
+            ? { ...user, isFollowing: !isCurrentlyFollowing }
+            : user
+        )
+      );
+    } catch (error) {
+      console.error('Follow/unfollow error:', error);
+    }
+  };
+
+  // Test function to check database connection
+  const testDatabase = async () => {
+    try {
+      console.log('Testing database connection...');
+      const response = await profileAPI.testUsers();
+      console.log('Database test result:', response.data);
+      alert(`Database test successful! Found ${response.data.totalUsers} users in database.`);
+    } catch (error) {
+      console.error('Database test error:', error);
+      alert('Database test failed: ' + (error.response?.data?.message || error.message));
+    }
+  };
+
+  // Close search dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.search-bar-wrapper')) {
+        setShowTopSearchDropdown(false);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, []);
 
   const handleNavigateToProfile = (userProfileData) => {
     setViewingUserProfile(userProfileData);
@@ -61,20 +156,97 @@ export default function HomePage({ onLogout }) {
   const SearchComponent = () => {
     const [searchResults, setSearchResults] = useState([]);
     const [localSearchTerm, setLocalSearchTerm] = useState('');
+    const [isSearching, setIsSearching] = useState(false);
+    const [searchError, setSearchError] = useState('');
+    const [hasSearched, setHasSearched] = useState(false);
 
-    const handleSearch = (e) => {
+    // Real-time search as user types
+    const handleSearchChange = async (e) => {
+      const query = e.target.value;
+      setLocalSearchTerm(query);
+      
+      // Clear previous timeout
+      if (window.searchTabTimeout) {
+        clearTimeout(window.searchTabTimeout);
+      }
+      
+      if (query.trim().length >= 2) {
+        setHasSearched(true);
+        setIsSearching(true);
+        setSearchError('');
+        
+        // Debounce the search
+        window.searchTabTimeout = setTimeout(async () => {
+          try {
+            const response = await profileAPI.searchUsers(query.trim());
+            setSearchResults(response.data || []);
+          } catch (error) {
+            console.error('Search error:', error);
+            setSearchError('Failed to search users. Please try again.');
+            setSearchResults([]);
+          } finally {
+            setIsSearching(false);
+          }
+        }, 300);
+      } else {
+        setSearchResults([]);
+        setHasSearched(false);
+        setSearchError('');
+      }
+    };
+
+    const handleSearch = async (e) => {
       e.preventDefault();
-      if (localSearchTerm.trim()) {
-        // Simulate search results
-        const dummyResults = [
-          { id: 1, name: 'John Doe', username: 'johndoe', avatar: 'J' },
-          { id: 2, name: 'Jane Smith', username: 'janesmith', avatar: 'J' },
-          { id: 3, name: 'Mike Johnson', username: 'mikejohnson', avatar: 'M' },
-        ].filter(user => 
-          user.name.toLowerCase().includes(localSearchTerm.toLowerCase()) ||
-          user.username.toLowerCase().includes(localSearchTerm.toLowerCase())
+      if (localSearchTerm.trim().length < 2) {
+        setSearchError('Search query must be at least 2 characters long');
+        return;
+      }
+
+      setIsSearching(true);
+      setSearchError('');
+      setHasSearched(true);
+      
+      try {
+        const response = await profileAPI.searchUsers(localSearchTerm.trim());
+        setSearchResults(response.data || []);
+      } catch (error) {
+        console.error('Search error:', error);
+        setSearchError('Failed to search users. Please try again.');
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    const handleFollowToggle = async (userId, isCurrentlyFollowing) => {
+      try {
+        if (isCurrentlyFollowing) {
+          await profileAPI.unfollowUser(userId);
+        } else {
+          await profileAPI.followUser(userId);
+        }
+        
+        // Update the search results to reflect the change
+        setSearchResults(prev => 
+          prev.map(user => 
+            user._id === userId 
+              ? { ...user, isFollowing: !isCurrentlyFollowing }
+              : user
+          )
         );
-        setSearchResults(dummyResults);
+      } catch (error) {
+        console.error('Follow/unfollow error:', error);
+        alert('Failed to update follow status. Please try again.');
+      }
+    };
+
+    const handleUserClick = async (user) => {
+      try {
+        const response = await profileAPI.getUserProfile(user._id);
+        handleNavigateToProfile(response.data.user);
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+        alert('Failed to load user profile. Please try again.');
       }
     };
 
@@ -85,42 +257,108 @@ export default function HomePage({ onLogout }) {
             <FaArrowLeft />
           </button>
           <h2>Search</h2>
+          <button 
+            onClick={testDatabase}
+            style={{
+              marginTop: '10px',
+              padding: '8px 16px',
+              backgroundColor: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Test DB
+          </button>
         </div>
 
-        <form onSubmit={handleSearch} className="search-form">
+        <div className="search-form">
           <div className="search-input-wrapper">
             <FaSearch className="search-icon" />
             <input
               type="text"
               className="search-input"
-              placeholder="Search users..."
+              placeholder="Search by name or enrollment..."
               value={localSearchTerm}
-              onChange={(e) => setLocalSearchTerm(e.target.value)}
+              onChange={handleSearchChange}
             />
+            {localSearchTerm && (
+              <button 
+                className="clear-search-btn"
+                onClick={() => {
+                  setLocalSearchTerm('');
+                  setSearchResults([]);
+                  setHasSearched(false);
+                  setSearchError('');
+                }}
+              >
+                ×
+              </button>
+            )}
           </div>
-          <button type="submit" className="search-button">
-            Search
-          </button>
-        </form>
+        </div>
 
-        {searchResults.length > 0 && (
+        {searchError && (
+          <div className="search-error">
+            <p>{searchError}</p>
+          </div>
+        )}
+
+        {isSearching && (
+          <div className="search-loading-container">
+            <div className="search-spinner"></div>
+            <span>Searching...</span>
+          </div>
+        )}
+
+        {!isSearching && hasSearched && searchResults.length > 0 && (
           <div className="search-results">
-            <h3>Results</h3>
             {searchResults.map(user => (
-              <div key={user.id} className="search-result-item">
-                <div className="user-avatar">{user.avatar}</div>
-                <div className="user-info">
-                  <div className="user-name">{user.name}</div>
-                  <div className="user-username">@{user.username}</div>
+              <div key={user._id} className="search-result-user-card">
+                <div className="search-user-avatar-section" onClick={() => handleUserClick(user)}>
+                  <img
+                    src={user.profilePic ? `http://localhost:5000${user.profilePic}` : '/default-avatar.svg'}
+                    alt="Profile"
+                    className="search-user-avatar-img"
+                    onError={(e) => {
+                      e.target.src = '/default-avatar.svg';
+                    }}
+                  />
+                </div>
+                <div className="search-user-details" onClick={() => handleUserClick(user)}>
+                  <div className="search-username">@{user.enrollment}</div>
+                  <div className="search-fullname">{user.fullName}</div>
+                  <div className="search-department">{user.department} Department</div>
+                  {user.isFollowing && (
+                    <div className="followed-by">Followed by you</div>
+                  )}
+                </div>
+                <div className="search-user-actions">
+                  <button
+                    className={`search-follow-button ${user.isFollowing ? 'following' : 'follow'}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleFollowToggle(user._id, user.isFollowing);
+                    }}
+                  >
+                    {user.isFollowing ? 'Following' : 'Follow'}
+                  </button>
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        {localSearchTerm && searchResults.length === 0 && (
+        {!isSearching && hasSearched && searchResults.length === 0 && !searchError && (
           <div className="no-results">
             <p>No users found for "{localSearchTerm}"</p>
+          </div>
+        )}
+
+        {!hasSearched && localSearchTerm.length === 0 && (
+          <div className="search-placeholder">
+            <p>Search for users by name or enrollment number</p>
           </div>
         )}
       </div>
@@ -146,14 +384,68 @@ export default function HomePage({ onLogout }) {
         </div>
         <div className="center-section">
           <div className="search-bar-wrapper">
-       
             <input
               type="text"
               className="search-bar"
-              placeholder="Search users..."
+              placeholder="Search users by name or enrollment..."
               value={searchTerm}
               onChange={handleSearchChange}
+              onFocus={() => {
+                if (topSearchResults.length > 0) {
+                  setShowTopSearchDropdown(true);
+                }
+              }}
             />
+            
+            {/* Search Dropdown */}
+            {showTopSearchDropdown && (
+              <div className="search-dropdown">
+                {isTopSearching ? (
+                  <div className="search-loading">
+                    <div className="search-spinner"></div>
+                    <span>Searching...</span>
+                  </div>
+                ) : topSearchResults.length > 0 ? (
+                  <div className="search-results-list">
+                    {topSearchResults.map(user => (
+                      <div 
+                        key={user._id} 
+                        className="search-result-user"
+                        onClick={() => handleTopSearchUserClick(user)}
+                      >
+                        <div className="search-user-avatar">
+                          <img
+                            src={user.profilePic ? `http://localhost:5000${user.profilePic}` : '/default-avatar.svg'}
+                            alt="Profile"
+                            onError={(e) => {
+                              e.target.src = '/default-avatar.svg';
+                            }}
+                          />
+                        </div>
+                        <div className="search-user-info">
+                          <div className="search-user-name">{user.fullName}</div>
+                          <div className="search-user-enrollment">@{user.enrollment}</div>
+                          <div className="search-user-department">{user.department} Department</div>
+                        </div>
+                        <button
+                          className={`search-follow-btn ${user.isFollowing ? 'following' : 'follow'}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleTopSearchFollowToggle(user._id, user.isFollowing);
+                          }}
+                        >
+                          {user.isFollowing ? 'Following' : 'Follow'}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : searchTerm.trim().length >= 2 ? (
+                  <div className="search-no-results">
+                    <span>No users found for "{searchTerm}"</span>
+                  </div>
+                ) : null}
+              </div>
+            )}
           </div>
         </div>
         <div className="right-section nav-actions">

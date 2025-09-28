@@ -759,3 +759,455 @@ body {
     padding-top: 80px;
   }
 }
+
+/* Search Results Styles */
+.search-error {
+  background: rgba(255, 0, 0, 0.1);
+  border: 1px solid rgba(255, 0, 0, 0.3);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+  color: #ff6b6b;
+}
+
+.search-result-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.search-result-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
+}
+
+.search-result-item .user-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.search-result-item .user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.search-result-item .user-info {
+  flex: 1;
+}
+
+.search-result-item .user-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #ffffff;
+  margin-bottom: 0.25rem;
+}
+
+.search-result-item .user-enrollment {
+  color: #bbb;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+
+.search-result-item .user-department {
+  color: #888;
+  font-size: 0.85rem;
+}
+
+.search-result-item .follow-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 80px;
+}
+
+.search-result-item .follow-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.search-result-item .follow-btn.following {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+}
+
+.search-result-item .follow-btn.following:hover {
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+}
+
+/* Top Navigation Search Dropdown Styles */
+.search-bar-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+}
+
+.search-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+  margin-top: 8px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.search-loading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  color: #ffffff;
+  justify-content: center;
+}
+
+.search-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid #ffffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.search-results-list {
+  padding: 8px 0;
+}
+
+.search-result-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.search-result-user:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.search-result-user:last-child {
+  border-bottom: none;
+}
+
+.search-user-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.search-user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.search-user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.search-user-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: #ffffff;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-user-enrollment {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-user-department {
+  font-size: 11px;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-follow-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  min-width: 70px;
+}
+
+.search-follow-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.search-follow-btn.following {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+}
+
+.search-follow-btn.following:hover {
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+}
+
+.search-no-results {
+  padding: 20px;
+  text-align: center;
+  color: #888;
+  font-size: 14px;
+}
+
+/* Mobile responsive for search dropdown */
+@media (max-width: 700px) {
+  .search-bar-wrapper {
+    max-width: 100%;
+  }
+  
+  .search-dropdown {
+    left: -20px;
+    right: -20px;
+    margin-top: 4px;
+  }
+  
+  .search-result-user {
+    padding: 10px 12px;
+  }
+  
+  .search-user-avatar {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .search-follow-btn {
+    padding: 5px 12px;
+    font-size: 11px;
+    min-width: 60px;
+  }
+}
+
+/* Search Tab Specific Styles */
+.search-loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 20px;
+  color: #ffffff;
+}
+
+.search-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top: 3px solid #ffffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.search-result-user-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: background-color 0.2s ease;
+}
+
+.search-result-user-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.search-result-user-card:last-child {
+  border-bottom: none;
+}
+
+.search-user-avatar-section {
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.search-user-avatar-img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.search-user-details {
+  flex: 1;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.search-username {
+  font-weight: 600;
+  font-size: 16px;
+  color: #ffffff;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-fullname {
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-department {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.followed-by {
+  font-size: 12px;
+  color: #999;
+  font-style: italic;
+}
+
+.search-user-actions {
+  flex-shrink: 0;
+}
+
+.search-follow-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 80px;
+}
+
+.search-follow-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.search-follow-button.following {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+}
+
+.search-follow-button.following:hover {
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+}
+
+.search-placeholder {
+  text-align: center;
+  padding: 60px 20px;
+  color: #888;
+}
+
+.search-placeholder p {
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.clear-search-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: #ffffff;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
+}
+
+.clear-search-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.search-input-wrapper {
+  position: relative;
+}
+
+/* Mobile responsive for search tab */
+@media (max-width: 700px) {
+  .search-result-user-card {
+    padding: 12px 16px;
+    gap: 12px;
+  }
+  
+  .search-user-avatar-img {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .search-username {
+    font-size: 15px;
+  }
+  
+  .search-fullname {
+    font-size: 13px;
+  }
+  
+  .search-department {
+    font-size: 11px;
+  }
+  
+  .search-follow-button {
+    padding: 6px 16px;
+    font-size: 13px;
+    min-width: 70px;
+  }
+}

@@ -1,5 +1,6 @@
 import asyncHandler from 'express-async-handler';
 import Post from '../models/Post.js';
+import User from '../models/User.js';
 import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -20,7 +21,19 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage });
+const upload = multer({ 
+  storage,
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'), false);
+    }
+  },
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+});
 
 // @desc    Create a new post
 // @route   POST /api/posts
@@ -39,11 +52,17 @@ const createPost = asyncHandler(async (req, res) => {
   res.status(201).json(createdPost);
 });
 
-// @desc    Get all posts
+// @desc    Get posts from current user and followed users
 // @route   GET /api/posts
 // @access  Private
 const getPosts = asyncHandler(async (req, res) => {
-  const posts = await Post.find({})
+  // Get current user with following list
+  const currentUser = await User.findById(req.user._id).select('following');
+  
+  // Create array of user IDs to fetch posts from (current user + followed users)
+  const userIdsToFetch = [req.user._id, ...currentUser.following];
+  
+  const posts = await Post.find({ userId: { $in: userIdsToFetch } })
     .sort({ createdAt: -1 })
     .populate('userId', 'fullName profilePic enrollment');
   res.json(posts);

@@ -23,23 +23,42 @@ const ProfilePage = ({ userProfile, onBackToHome, onNavigateToSettings, isMobile
     totalFollowers: 0,
     totalFollowing: 0
   });
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [isFollowLoading, setIsFollowLoading] = useState(false);
 
   useEffect(() => {
-    const fetchCurrentUser = async () => {
+    const fetchUserData = async () => {
       try {
         setLoading(true);
-        const response = await profileAPI.getCurrentUserProfile();
-        setCurrentUser(response.data.user);
-        setUserPosts(response.data.posts);
-        setUserStats(response.data.user.stats || { totalPosts: 0, totalFollowers: 0, totalFollowing: 0 });
+        let response;
         
-        // Set form data for editing
-        setFormData({
-          fullName: response.data.user.fullName || '',
-          bio: response.data.user.bio || '',
-          department: response.data.user.department || '',
-        });
-        setProfilePicPreview(response.data.user.profilePic ? `http://localhost:5000${response.data.user.profilePic}` : null);
+        // Always fetch current user data first
+        const currentUserResponse = await profileAPI.getCurrentUserProfile();
+        const loggedInUser = currentUserResponse.data.user;
+        
+        if (userProfile) {
+          // Fetching another user's profile
+          response = await profileAPI.getUserProfile(userProfile._id);
+          const otherUser = response.data.user;
+          setCurrentUser(loggedInUser); // Keep current user data
+          setUserPosts(response.data.posts);
+          setUserStats(otherUser.stats || { totalPosts: 0, totalFollowers: 0, totalFollowing: 0 });
+          setIsFollowing(response.data.isFollowing || false);
+        } else {
+          // Fetching current user's profile
+          setCurrentUser(loggedInUser);
+          setUserPosts(currentUserResponse.data.posts);
+          setUserStats(loggedInUser.stats || { totalPosts: 0, totalFollowers: 0, totalFollowing: 0 });
+          setIsFollowing(false); // Current user can't follow themselves
+          
+          // Set form data for editing (only for current user)
+          setFormData({
+            fullName: loggedInUser.fullName || '',
+            bio: loggedInUser.bio || '',
+            department: loggedInUser.department || '',
+          });
+          setProfilePicPreview(loggedInUser.profilePic ? `http://localhost:5000${loggedInUser.profilePic}` : null);
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -47,10 +66,11 @@ const ProfilePage = ({ userProfile, onBackToHome, onNavigateToSettings, isMobile
       }
     };
 
-    fetchCurrentUser();
-  }, []);
+    fetchUserData();
+  }, [userProfile]);
 
-  const isOwnProfile = !userProfile || (currentUser && currentUser._id === userProfile._id);
+  // Determine if viewing own profile
+  const isOwnProfile = !userProfile || (currentUser && userProfile && currentUser._id === userProfile._id);
   const displayUser = userProfile || currentUser;
 
   const handleInputChange = (e) => {
@@ -124,6 +144,34 @@ const ProfilePage = ({ userProfile, onBackToHome, onNavigateToSettings, isMobile
     }
   };
 
+  const handleFollowToggle = async () => {
+    if (isOwnProfile || !userProfile) return;
+    
+    setIsFollowLoading(true);
+    try {
+      if (isFollowing) {
+        await profileAPI.unfollowUser(userProfile._id);
+        setIsFollowing(false);
+        setUserStats(prev => ({
+          ...prev,
+          totalFollowers: prev.totalFollowers - 1
+        }));
+      } else {
+        await profileAPI.followUser(userProfile._id);
+        setIsFollowing(true);
+        setUserStats(prev => ({
+          ...prev,
+          totalFollowers: prev.totalFollowers + 1
+        }));
+      }
+    } catch (error) {
+      console.error('Follow/unfollow error:', error);
+      setMessage({ type: 'error', text: 'Failed to update follow status. Please try again.' });
+    } finally {
+      setIsFollowLoading(false);
+    }
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -137,7 +185,7 @@ const ProfilePage = ({ userProfile, onBackToHome, onNavigateToSettings, isMobile
       <div className="profile-page">
         <div className="loading-container">
           <div className="loading-spinner"></div>
-          <p>Loading profile...</p>
+          <p>{userProfile ? `Loading ${userProfile.fullName}'s profile...` : 'Loading your profile...'}</p>
         </div>
       </div>
     );
@@ -168,6 +216,11 @@ const ProfilePage = ({ userProfile, onBackToHome, onNavigateToSettings, isMobile
           <h2 className="profile-title">
             {isOwnProfile ? 'My Profile' : `${displayUser?.fullName || 'User'}'s Profile`}
           </h2>
+          {!isOwnProfile && (
+            <div className="profile-subtitle">
+              @{displayUser?.enrollment}
+            </div>
+          )}
         </div>
 
         <div className="profile-info">
@@ -231,6 +284,15 @@ const ProfilePage = ({ userProfile, onBackToHome, onNavigateToSettings, isMobile
                 onClick={() => setIsEditing(true)}
               >
                 <FaEdit /> Edit Profile
+              </button>
+            )}
+            {!isOwnProfile && userProfile && (
+              <button 
+                className={`follow-profile-btn ${isFollowing ? 'following' : 'follow'}`}
+                onClick={handleFollowToggle}
+                disabled={isFollowLoading}
+              >
+                {isFollowLoading ? 'Updating...' : (isFollowing ? 'Following' : 'Follow')}
               </button>
             )}
           </div>

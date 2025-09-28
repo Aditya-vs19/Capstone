@@ -43,6 +43,10 @@ export const profileAPI = {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
   changePassword: (userId, data) => API.put(`/profile/${userId}/password`, data),
+  searchUsers: (query) => API.get(`/profile/search?query=${encodeURIComponent(query)}`),
+  followUser: (userId) => API.post(`/profile/${userId}/follow`),
+  unfollowUser: (userId) => API.post(`/profile/${userId}/unfollow`),
+  testUsers: () => API.get('/profile/test-users'),
 };
 
 export const postsAPI = {

@@ -52,9 +52,28 @@ const getUserProfile = asyncHandler(async (req, res) => {
     .sort({ createdAt: -1 })
     .populate('userId', 'fullName profilePic');
 
+  // Get user stats
+  const totalPosts = await Post.countDocuments({ userId: req.params.id });
+  const totalFollowers = user.followers.length;
+  const totalFollowing = user.following.length;
+
+  // Check if current user is following this user
+  const currentUser = await User.findById(req.user._id).select('following');
+  const isFollowing = currentUser.following.some(
+    id => id.toString() === req.params.id
+  );
+
   res.json({
-    user,
+    user: {
+      ...user.toObject(),
+      stats: {
+        totalPosts,
+        totalFollowers,
+        totalFollowing
+      }
+    },
     posts,
+    isFollowing
   });
 });
 
@@ -191,8 +210,8 @@ const getCurrentUserProfile = asyncHandler(async (req, res) => {
 
   // Get user stats
   const totalPosts = await Post.countDocuments({ userId: req.user._id });
-  const totalFollowers = 0; // Placeholder - implement when you add follow system
-  const totalFollowing = 0; // Placeholder - implement when you add follow system
+  const totalFollowers = user.followers.length;
+  const totalFollowing = user.following.length;
 
   res.json({
     user: {
@@ -207,11 +226,143 @@ const getCurrentUserProfile = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Search users by name or enrollment
+// @route   GET /api/profile/search?query=...
+// @access  Private
+const searchUsers = asyncHandler(async (req, res) => {
+  const query = req.query.query;
+  
+  if (!query || query.trim().length < 2) {
+    res.status(400);
+    throw new Error('Search query must be at least 2 characters long');
+  }
+
+  const users = await User.find({
+    $and: [
+      { _id: { $ne: req.user._id } }, // Exclude current user
+      {
+        $or: [
+          { fullName: { $regex: query, $options: 'i' } },
+          { enrollment: { $regex: query, $options: 'i' } }
+        ]
+      }
+    ]
+  })
+  .select('fullName enrollment profilePic department')
+  .limit(20);
+
+  // Add follow status for each user
+  const currentUser = await User.findById(req.user._id).select('following');
+  const followingIds = currentUser.following.map(id => id.toString());
+
+  const usersWithFollowStatus = users.map(user => ({
+    ...user.toObject(),
+    isFollowing: followingIds.includes(user._id.toString())
+  }));
+
+  res.json(usersWithFollowStatus);
+});
+
+// @desc    Test endpoint to check if users exist in database
+// @route   GET /api/profile/test-users
+// @access  Private
+const testUsers = asyncHandler(async (req, res) => {
+  const totalUsers = await User.countDocuments();
+  const sampleUsers = await User.find({}).select('fullName enrollment email').limit(5);
+  
+  console.log('Total users in database:', totalUsers);
+  console.log('Sample users:', sampleUsers);
+  
+  res.json({
+    totalUsers,
+    sampleUsers
+  });
+});
+
+// @desc    Follow a user
+// @route   POST /api/profile/:id/follow
+// @access  Private
+const followUser = asyncHandler(async (req, res) => {
+  const targetUserId = req.params.id;
+  
+  if (targetUserId === req.user._id.toString()) {
+    res.status(400);
+    throw new Error('Cannot follow yourself');
+  }
+
+  const targetUser = await User.findById(targetUserId);
+  if (!targetUser) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+
+  const currentUser = await User.findById(req.user._id);
+
+  // Check if already following
+  if (currentUser.following.includes(targetUserId)) {
+    res.status(400);
+    throw new Error('Already following this user');
+  }
+
+  // Add to following and followers
+  currentUser.following.push(targetUserId);
+  targetUser.followers.push(req.user._id);
+
+  await currentUser.save();
+  await targetUser.save();
+
+  res.json({
+    message: 'Successfully followed user',
+    isFollowing: true
+  });
+});
+
+// @desc    Unfollow a user
+// @route   POST /api/profile/:id/unfollow
+// @access  Private
+const unfollowUser = asyncHandler(async (req, res) => {
+  const targetUserId = req.params.id;
+  
+  const targetUser = await User.findById(targetUserId);
+  if (!targetUser) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+
+  const currentUser = await User.findById(req.user._id);
+
+  // Check if currently following
+  if (!currentUser.following.includes(targetUserId)) {
+    res.status(400);
+    throw new Error('Not following this user');
+  }
+
+  // Remove from following and followers
+  currentUser.following = currentUser.following.filter(
+    id => id.toString() !== targetUserId
+  );
+  targetUser.followers = targetUser.followers.filter(
+    id => id.toString() !== req.user._id.toString()
+  );
+
+  await currentUser.save();
+  await targetUser.save();
+
+  res.json({
+    message: 'Successfully unfollowed user',
+    isFollowing: false
+  });
+});
+
 export { 
   upload, 
   getUserProfile, 
   updateUserProfile, 
   uploadProfilePicture, 
   changePassword, 
-  getCurrentUserProfile 
+  getCurrentUserProfile,
+  searchUsers,
+  followUser,
+  unfollowUser,
+  testUsers
 };

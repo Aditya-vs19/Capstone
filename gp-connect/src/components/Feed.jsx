@@ -14,49 +14,58 @@ export const getFeeds = async () => {
 
 export default function Feed({ onNavigateToProfile }) {
   const [posts, setPosts] = useState([]);
-  const [postStates, setPostStates] = useState(
-    posts.reduce((acc, post) => {
-      acc[post.id] = {
-        liked: false,
-        likes: Math.floor(Math.random() * 100) + 10,
-        comments: [],
-        showComments: false,
-        commentText: ''
-      };
-      return acc;
-    }, {})
-  );
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [postStates, setPostStates] = useState({});
 
   useEffect(() => {
     const fetchPosts = async () => {
-      const fetchedPosts = await getFeeds();
-      setPosts(fetchedPosts);
+      try {
+        setLoading(true);
+        setError('');
+        const fetchedPosts = await getFeeds();
+        setPosts(fetchedPosts);
+        
+        // Initialize post states for each post
+        const initialStates = {};
+        fetchedPosts.forEach(post => {
+          initialStates[post._id] = {
+            liked: false,
+            likes: Math.floor(Math.random() * 100) + 10,
+            comments: [],
+            showComments: false,
+            commentText: ''
+          };
+        });
+        setPostStates(initialStates);
+      } catch (err) {
+        console.error('Error fetching posts:', err);
+        setError('Failed to load posts. Please try again.');
+      } finally {
+        setLoading(false);
+      }
     };
     fetchPosts();
   }, []);
 
-  const handleUsernameClick = (username) => {
-    console.log(`Navigating to profile of: ${username}`);
-    
-    const dummyProfileData = {
-      username: username,
-      name: username,
-      bio: `This is ${username}'s profile bio.`,
-      avatar: `https://ui-avatars.com/api/?name=${username}&background=random`,
-      posts: [
-        { id: 1, image: './src/images/image1.jpg' },
-        { id: 2, image: './src/images/image2.jpg' },
-        { id: 3, image: './src/images/image3.jpg' },
-      ],
-      followers: Math.floor(Math.random() * 1000) + 100,
-      following: Math.floor(Math.random() * 500) + 50,
-      postsCount: Math.floor(Math.random() * 50) + 5
-    };
-    
-    if (onNavigateToProfile) {
-      onNavigateToProfile(dummyProfileData);
-    } else {
-      alert(`Navigating to ${username}'s profile! (Backend integration pending)`);
+  const handleUsernameClick = async (userId) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/profile/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (onNavigateToProfile) {
+          onNavigateToProfile(data.user);
+        }
+      } else {
+        console.error('Failed to fetch user profile');
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
     }
   };
 
@@ -112,32 +121,111 @@ export default function Feed({ onNavigateToProfile }) {
     }));
   };
 
+  if (loading) {
+    return (
+      <div className="posts-container">
+        <div style={{ textAlign: 'center', padding: '2rem', color: '#ffffff' }}>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            border: '4px solid #333',
+            borderTop: '4px solid #ffffff',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 20px'
+          }}></div>
+          <p>Loading posts...</p>
+        </div>
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="posts-container">
+        <div style={{ textAlign: 'center', padding: '2rem', color: '#ff6b6b' }}>
+          <p>{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            style={{
+              background: '#667eea',
+              color: 'white',
+              border: 'none',
+              padding: '0.5rem 1rem',
+              borderRadius: '5px',
+              cursor: 'pointer'
+            }}
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (posts.length === 0) {
+    return (
+      <div className="posts-container">
+        <div style={{ textAlign: 'center', padding: '2rem', color: '#ffffff' }}>
+          <p>No posts in your feed yet.</p>
+          <p style={{ color: '#888', fontSize: '14px', marginTop: '8px' }}>
+            Follow some users or create your first post to see content here!
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="posts-container">
       {posts.map((post) => {
-        const postState = postStates[post.id];
+        const postState = postStates[post._id];
+        const user = post.userId || post.user;
         
         return (
-          <div key={post.id} className="post-card">
+          <div key={post._id} className="post-card">
             <div className="post-header">
-              <div className="avatar">{post.user[0].toUpperCase()}</div>
+              <div className="avatar">
+                {user.profilePic ? (
+                  <img 
+                    src={`http://localhost:5000${user.profilePic}`} 
+                    alt="Profile" 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'block';
+                    }}
+                  />
+                ) : null}
+                <span style={{ display: user.profilePic ? 'none' : 'block' }}>
+                  {user.fullName ? user.fullName[0].toUpperCase() : 'U'}
+                </span>
+              </div>
               <span 
                 className="username clickable-username" 
-                onClick={() => handleUsernameClick(post.user)}
-                title={`Click to view ${post.user}'s profile`}
+                onClick={() => handleUsernameClick(user._id)}
+                title={`Click to view ${user.fullName}'s profile`}
               >
-                {post.user}
+                {user.fullName}
               </span>
             </div>
-            <img src={post.image} alt={post.caption} className="post-img" />
+            {post.image && (
+              <img src={`http://localhost:5000${post.image}`} alt={post.caption} className="post-img" />
+            )}
             <div className="post-body">
               <p>
                 <span 
                   className="username clickable-username" 
-                  onClick={() => handleUsernameClick(post.user)}
-                  title={`Click to view ${post.user}'s profile`}
+                  onClick={() => handleUsernameClick(user._id)}
+                  title={`Click to view ${user.fullName}'s profile`}
                 >
-                  {post.user}
+                  {user.fullName}
                 </span> {post.caption}
               </p>
               
