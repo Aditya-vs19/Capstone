@@ -61,7 +61,7 @@ const registerUser = asyncHandler(async (req, res) => {
     `;
 
     try {
-      await sendEmail(email, 'Verify Your Email - GP-Connect', emailMessage);
+      await sendEmail(email, 'Verify Your Email - GP-ConnecX', emailMessage);
       res.status(201).json({
         message: 'OTP sent to your email. Please check your inbox and verify your email.',
         email: user.email,
