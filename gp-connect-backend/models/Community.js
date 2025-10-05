@@ -13,7 +13,7 @@ const communitySchema = mongoose.Schema(
     },
     avatar: {
       type: String,
-      default: '🏢',
+      default: '🌐',
     },
     members: [{
       type: mongoose.Schema.Types.ObjectId,
@@ -25,11 +25,11 @@ const communitySchema = mongoose.Schema(
         ref: 'User',
         required: true
       },
-      text: {
+      content: {
         type: String,
         required: true
       },
-      createdAt: {
+      timestamp: {
         type: Date,
         default: Date.now
       }

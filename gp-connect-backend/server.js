@@ -68,24 +68,17 @@ io.on('connection', (socket) => {
   console.log('User connected:', socket.id, 'User ID:', socket.userId);
 
   // Join community room
-  socket.on('joinRoom', (data) => {
+  socket.on('joinCommunity', (data) => {
     const { communityId } = data;
     socket.join(`community_${communityId}`);
     console.log(`User ${socket.userId} joined community ${communityId}`);
   });
 
   // Leave community room
-  socket.on('leaveRoom', (data) => {
+  socket.on('leaveCommunity', (data) => {
     const { communityId } = data;
     socket.leave(`community_${communityId}`);
     console.log(`User ${socket.userId} left community ${communityId}`);
-  });
-
-  // Handle member updates for cross-tab sync
-  socket.on('member-update', (data) => {
-    const { communityId, data: updateData } = data;
-    socket.to(`community_${communityId}`).emit('community:memberUpdate', updateData);
-    console.log(`Member update broadcasted for community ${communityId}`);
   });
 
   // Handle post like updates

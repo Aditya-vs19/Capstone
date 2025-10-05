@@ -1,26 +1,31 @@
 import express from 'express';
 import { protect } from '../middleware/authMiddleware.js';
 import {
-  getAllCommunities,
   getCommunity,
-  toggleJoinCommunity,
+  joinCommunity,
+  leaveCommunity,
   getCommunityMessages,
-  sendMessage,
-  createCommunity
+  sendMessage
 } from '../controllers/communityController.js';
 
 const router = express.Router();
 
-// Public routes
-router.get('/', getAllCommunities);
-
-// Protected routes
+// All routes are protected
 router.use(protect);
 
-router.get('/:id', getCommunity);
-router.post('/:id/join', toggleJoinCommunity);
-router.get('/:id/messages', getCommunityMessages);
-router.post('/:id/messages', sendMessage);
-router.post('/', createCommunity);
+// Get community details
+router.get('/', getCommunity);
+
+// Join community
+router.post('/join', joinCommunity);
+
+// Leave community
+router.post('/leave', leaveCommunity);
+
+// Get community messages
+router.get('/messages', getCommunityMessages);
+
+// Send message to community
+router.post('/message', sendMessage);
 
 export default router;

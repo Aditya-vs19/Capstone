@@ -3,7 +3,7 @@ import Feed from './Feed';
 import MessagePanel from './MessagePanel';
 import ProfilePage from './ProfilePage';
 import NotificationPage from './NotificationPage';
-import CommunitiesPage from './CommunitiesPage';
+import CommonCommunity from './CommonCommunity';
 import SettingsPage from './SettingsPage';
 import CreatePage from './CreatePage';
 import './HomePage.css';
@@ -497,7 +497,7 @@ export default function HomePage({ onLogout }) {
             />
           )}
           {activeTab === 'notifications' && <NotificationPage />}
-          {activeTab === 'communities' && <CommunitiesPage />}
+          {activeTab === 'communities' && <CommonCommunity />}
           {activeTab === 'create' && <CreatePage />}
           {activeTab === 'search' && <SearchComponent />}
           {activeTab === 'settings' && !isMobile && <SettingsPage onLogout={onLogout} />}

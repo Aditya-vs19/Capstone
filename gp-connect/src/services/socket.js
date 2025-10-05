@@ -51,23 +51,16 @@ class SocketService {
     }
   }
 
-  joinRoom(communityId) {
+  // Community socket methods
+  joinCommunity(communityId) {
     if (this.socket) {
-      this.socket.emit('joinRoom', { communityId });
+      this.socket.emit('joinCommunity', { communityId });
     }
   }
 
-  leaveRoom(communityId) {
+  leaveCommunity(communityId) {
     if (this.socket) {
-      this.socket.emit('leaveRoom', { communityId });
-    }
-  }
-
-  sendMessage(communityId, message) {
-    if (this.socket && this.isConnected) {
-      this.socket.emit('send-message', { communityId, message });
-    } else {
-      console.warn('Socket not connected, message will be sent via API');
+      this.socket.emit('leaveCommunity', { communityId });
     }
   }
 
@@ -92,12 +85,6 @@ class SocketService {
   offMemberUpdate(callback) {
     if (this.socket) {
       this.socket.off('community:memberUpdate', callback);
-    }
-  }
-
-  emitMemberUpdate(communityId, data) {
-    if (this.socket) {
-      this.socket.emit('member-update', { communityId, data });
     }
   }
 
