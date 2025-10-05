@@ -14,6 +14,33 @@ const postSchema = mongoose.Schema(
     image: {
       type: String, // Storing the path to the image
     },
+    likes: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }],
+    likesCount: {
+      type: Number,
+      default: 0
+    },
+    comments: [{
+      user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+      },
+      text: {
+        type: String,
+        required: true
+      },
+      createdAt: {
+        type: Date,
+        default: Date.now
+      }
+    }],
+    commentsCount: {
+      type: Number,
+      default: 0
+    }
   },
   {
     timestamps: true,

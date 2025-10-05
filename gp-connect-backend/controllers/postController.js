@@ -64,7 +64,9 @@ const getPosts = asyncHandler(async (req, res) => {
   
   const posts = await Post.find({ userId: { $in: userIdsToFetch } })
     .sort({ createdAt: -1 })
-    .populate('userId', 'fullName profilePic enrollment');
+    .populate('userId', 'fullName profilePic enrollment')
+    .populate('likes', 'fullName profilePic')
+    .populate('comments.user', 'fullName profilePic');
   res.json(posts);
 });
 
@@ -127,4 +129,137 @@ const deletePost = asyncHandler(async (req, res) => {
   }
 });
 
-export { upload, createPost, getPosts, getUserPosts, updatePost, deletePost };
+// @desc    Like/Unlike a post
+// @route   POST /api/posts/:id/like
+// @access  Private
+const toggleLike = asyncHandler(async (req, res) => {
+  const post = await Post.findById(req.params.id);
+  
+  if (!post) {
+    res.status(404);
+    throw new Error('Post not found');
+  }
+
+  const userId = req.user._id;
+  const isLiked = post.likes.includes(userId);
+
+  if (isLiked) {
+    // Unlike the post
+    post.likes.pull(userId);
+    post.likesCount = Math.max(0, post.likesCount - 1);
+  } else {
+    // Like the post
+    post.likes.push(userId);
+    post.likesCount += 1;
+  }
+
+  await post.save();
+  
+  // Populate the likes array with user details
+  await post.populate('likes', 'fullName profilePic');
+  
+  // Emit Socket.IO event for real-time updates
+  const io = req.app.get('io');
+  if (io) {
+    io.emit('post:likeUpdate', {
+      postId: post._id,
+      userId: userId,
+      liked: !isLiked,
+      likesCount: post.likesCount,
+      likes: post.likes
+    });
+  }
+  
+  res.json({
+    success: true,
+    liked: !isLiked,
+    likesCount: post.likesCount,
+    likes: post.likes
+  });
+});
+
+// @desc    Get who liked a post
+// @route   GET /api/posts/:id/likes
+// @access  Private
+const getPostLikes = asyncHandler(async (req, res) => {
+  const post = await Post.findById(req.params.id)
+    .populate('likes', 'fullName profilePic');
+  
+  if (!post) {
+    res.status(404);
+    throw new Error('Post not found');
+  }
+
+  res.json({
+    likesCount: post.likesCount,
+    likes: post.likes
+  });
+});
+
+// @desc    Add comment to a post
+// @route   POST /api/posts/:id/comments
+// @access  Private
+const addComment = asyncHandler(async (req, res) => {
+  const { text } = req.body;
+  const postId = req.params.id;
+  const userId = req.user._id;
+
+  const post = await Post.findById(postId);
+  
+  if (!post) {
+    res.status(404);
+    throw new Error('Post not found');
+  }
+
+  const newComment = {
+    user: userId,
+    text: text.trim()
+  };
+
+  post.comments.push(newComment);
+  post.commentsCount += 1;
+  
+  await post.save();
+  
+  // Populate the comment with user details
+  await post.populate('comments.user', 'fullName profilePic');
+  
+  // Get the newly added comment
+  const addedComment = post.comments[post.comments.length - 1];
+  
+  // Emit Socket.IO event for real-time updates
+  const io = req.app.get('io');
+  if (io) {
+    io.emit('post:commentUpdate', {
+      postId: post._id,
+      comment: addedComment,
+      commentsCount: post.commentsCount
+    });
+  }
+  
+  res.status(201).json({
+    success: true,
+    comment: addedComment,
+    commentsCount: post.commentsCount
+  });
+});
+
+// @desc    Get comments for a post
+// @route   GET /api/posts/:id/comments
+// @access  Private
+const getPostComments = asyncHandler(async (req, res) => {
+  const post = await Post.findById(req.params.id)
+    .populate('comments.user', 'fullName profilePic');
+  
+  if (!post) {
+    res.status(404);
+    throw new Error('Post not found');
+  }
+
+  res.json({
+    comments: post.comments,
+    commentsCount: post.commentsCount
+  });
+});
+
+export { upload, createPost, getPosts, getUserPosts, updatePost, deletePost, toggleLike, getPostLikes, addComment, getPostComments };

@@ -625,6 +625,18 @@
   border-color: #218838;
 }
 
+.community-btn.loading {
+  opacity: 0.7;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.community-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 .community-actions {
   display: flex;
   flex-direction: column;

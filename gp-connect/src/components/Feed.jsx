@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './Feed.css';
 import { postsAPI } from '../services/api';
 import { getProfilePicUrl, getPostImageUrl, handleImageError } from '../utils/imageUtils.js';
+import socketService from '../services/socket.js';
 
 export const getFeeds = async () => {
   try {
@@ -18,35 +19,115 @@ export default function Feed({ onNavigateToProfile }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [postStates, setPostStates] = useState({});
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    const fetchPosts = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
         setError('');
+        
+        // Fetch current user first
+        const currentUserResponse = await fetch('http://localhost:5000/api/profile/me', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        if (currentUserResponse.ok) {
+          const currentUserData = await currentUserResponse.json();
+          setCurrentUser(currentUserData.user);
+        }
+        
+        // Fetch posts
         const fetchedPosts = await getFeeds();
         setPosts(fetchedPosts);
         
-        // Initialize post states for each post
+        // Initialize post states for each post with real data
         const initialStates = {};
+        const currentUserId = currentUser?._id;
         fetchedPosts.forEach(post => {
+          // Check if current user has liked this post
+          const isLiked = currentUserId && post.likes && post.likes.some(like => {
+            if (typeof like === 'object' && like._id) {
+              return like._id === currentUserId;
+            } else if (typeof like === 'string') {
+              return like === currentUserId;
+            }
+            return false;
+          });
+          
           initialStates[post._id] = {
-            liked: false,
-            likes: Math.floor(Math.random() * 100) + 10,
-            comments: [],
+            liked: isLiked || false,
+            likes: post.likesCount || 0,
+            comments: post.comments || [],
             showComments: false,
             commentText: ''
           };
         });
         setPostStates(initialStates);
       } catch (err) {
-        console.error('Error fetching posts:', err);
+        console.error('Error fetching data:', err);
         setError('Failed to load posts. Please try again.');
       } finally {
         setLoading(false);
       }
     };
-    fetchPosts();
+    fetchData();
+  }, []);
+
+  // Socket.IO for real-time like and comment updates
+  useEffect(() => {
+    const handleLikeUpdate = (data) => {
+      const { postId, userId, liked, likesCount, likes } = data;
+      
+      // Update post states
+      setPostStates(prev => ({
+        ...prev,
+        [postId]: {
+          ...prev[postId],
+          liked: liked,
+          likes: likesCount
+        }
+      }));
+
+      // Update posts array
+      setPosts(prev => prev.map(post => 
+        post._id === postId 
+          ? { ...post, likes: likes, likesCount: likesCount }
+          : post
+      ));
+    };
+
+    const handleCommentUpdate = (data) => {
+      const { postId, comment, commentsCount } = data;
+      
+      // Update post states
+      setPostStates(prev => ({
+        ...prev,
+        [postId]: {
+          ...prev[postId],
+          comments: [...(prev[postId]?.comments || []), comment]
+        }
+      }));
+
+      // Update posts array
+      setPosts(prev => prev.map(post => 
+        post._id === postId 
+          ? { ...post, comments: [...(post.comments || []), comment], commentsCount: commentsCount }
+          : post
+      ));
+    };
+
+    // Connect to socket and listen for updates
+    socketService.connect();
+    socketService.onPostLikeUpdate(handleLikeUpdate);
+    socketService.onPostCommentUpdate(handleCommentUpdate);
+
+    return () => {
+      socketService.offPostLikeUpdate(handleLikeUpdate);
+      socketService.offPostCommentUpdate(handleCommentUpdate);
+    };
   }, []);
 
   const handleUsernameClick = async (userId) => {
@@ -70,15 +151,29 @@ export default function Feed({ onNavigateToProfile }) {
     }
   };
 
-  const handleLike = (postId) => {
-    setPostStates(prev => ({
-      ...prev,
-      [postId]: {
-        ...prev[postId],
-        liked: !prev[postId].liked,
-        likes: prev[postId].liked ? prev[postId].likes - 1 : prev[postId].likes + 1
-      }
-    }));
+  const handleLike = async (postId) => {
+    try {
+      const response = await postsAPI.toggleLike(postId);
+      const { liked, likesCount, likes } = response.data;
+      
+      setPostStates(prev => ({
+        ...prev,
+        [postId]: {
+          ...prev[postId],
+          liked: liked,
+          likes: likesCount
+        }
+      }));
+
+      // Update the post in the posts array with real like data
+      setPosts(prev => prev.map(post => 
+        post._id === postId 
+          ? { ...post, likes: likes, likesCount: likesCount }
+          : post
+      ));
+    } catch (error) {
+      console.error('Error toggling like:', error);
+    }
   };
 
   const handleComment = (postId) => {
@@ -91,24 +186,32 @@ export default function Feed({ onNavigateToProfile }) {
     }));
   };
 
-  const handleAddComment = (postId) => {
+  const handleAddComment = async (postId) => {
     const commentText = postStates[postId].commentText.trim();
     if (commentText) {
-      const newComment = {
-        id: Date.now(),
-        user: 'You',
-        text: commentText,
-        timestamp: new Date().toLocaleTimeString()
-      };
+      try {
+        const response = await postsAPI.addComment(postId, commentText);
+        const { comment, commentsCount } = response.data;
+        
+        // Update post states with the new comment
+        setPostStates(prev => ({
+          ...prev,
+          [postId]: {
+            ...prev[postId],
+            comments: [...prev[postId].comments, comment],
+            commentText: ''
+          }
+        }));
 
-      setPostStates(prev => ({
-        ...prev,
-        [postId]: {
-          ...prev[postId],
-          comments: [...prev[postId].comments, newComment],
-          commentText: ''
-        }
-      }));
+        // Update the post in the posts array
+        setPosts(prev => prev.map(post => 
+          post._id === postId 
+            ? { ...post, comments: [...post.comments, comment], commentsCount: commentsCount }
+            : post
+        ));
+      } catch (error) {
+        console.error('Error adding comment:', error);
+      }
     }
   };
 
@@ -232,17 +335,32 @@ export default function Feed({ onNavigateToProfile }) {
                 </span> {post.caption}
               </p>
               
-              {/* Like count */}
+              {/* Like count with who liked */}
               <div className="like-count">
                 {postState.likes} {postState.likes === 1 ? 'like' : 'likes'}
+                {post.likes && post.likes.length > 0 && (
+                  <div className="liked-by">
+                    {post.likes.slice(0, 3).map((like, index) => (
+                      <span key={index} className="liked-user">
+                        {typeof like === 'string' ? like : like.fullName}
+                        {index < Math.min(post.likes.length, 3) - 1 && ', '}
+                      </span>
+                    ))}
+                    {post.likes.length > 3 && (
+                      <span className="more-likes"> and {post.likes.length - 3} others</span>
+                    )}
+                  </div>
+                )}
               </div>
               
               {/* Comments section */}
               {postState.showComments && (
                 <div className="comments-section">
-                  {postState.comments.map((comment) => (
-                    <div key={comment.id} className="comment">
-                      <span className="comment-username">{comment.user}</span>
+                  {postState.comments.map((comment, index) => (
+                    <div key={comment._id || index} className="comment">
+                      <span className="comment-username">
+                        {typeof comment.user === 'object' ? comment.user.fullName : 'User'}
+                      </span>
                       <span className="comment-text">{comment.text}</span>
                     </div>
                   ))}
@@ -251,12 +369,12 @@ export default function Feed({ onNavigateToProfile }) {
                       type="text"
                       placeholder="Add a comment..."
                       value={postState.commentText}
-                      onChange={(e) => handleCommentChange(post.id, e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleAddComment(post.id)}
+                      onChange={(e) => handleCommentChange(post._id, e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleAddComment(post._id)}
                       className="comment-input"
                     />
                     <button 
-                      onClick={() => handleAddComment(post.id)}
+                      onClick={() => handleAddComment(post._id)}
                       className="comment-button"
                       disabled={!postState.commentText.trim()}
                     >
@@ -271,7 +389,7 @@ export default function Feed({ onNavigateToProfile }) {
                   role="img" 
                   aria-label="like"
                   className={`like-button ${postState.liked ? 'liked' : ''}`}
-                  onClick={() => handleLike(post.id)}
+                  onClick={() => handleLike(post._id)}
                 >
                   {postState.liked ? '❤️' : '🤍'}
                 </span>
@@ -279,9 +397,9 @@ export default function Feed({ onNavigateToProfile }) {
                   role="img" 
                   aria-label="comment"
                   className="comment-button-icon"
-                  onClick={() => handleComment(post.id)}
+                  onClick={() => handleComment(post._id)}
                 >
-                  💬
+                  💬 {post.commentsCount || 0}
                 </span>
                 <span role="img" aria-label="share">📤</span>
               </div>

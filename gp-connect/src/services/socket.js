@@ -100,6 +100,32 @@ class SocketService {
       this.socket.emit('member-update', { communityId, data });
     }
   }
+
+  // Post like functionality
+  onPostLikeUpdate(callback) {
+    if (this.socket) {
+      this.socket.on('post:likeUpdate', callback);
+    }
+  }
+
+  offPostLikeUpdate(callback) {
+    if (this.socket) {
+      this.socket.off('post:likeUpdate', callback);
+    }
+  }
+
+  // Post comment functionality
+  onPostCommentUpdate(callback) {
+    if (this.socket) {
+      this.socket.on('post:commentUpdate', callback);
+    }
+  }
+
+  offPostCommentUpdate(callback) {
+    if (this.socket) {
+      this.socket.off('post:commentUpdate', callback);
+    }
+  }
 }
 
 export default new SocketService();

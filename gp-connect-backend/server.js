@@ -88,6 +88,20 @@ io.on('connection', (socket) => {
     console.log(`Member update broadcasted for community ${communityId}`);
   });
 
+  // Handle post like updates
+  socket.on('post-like', (data) => {
+    const { postId, userId, liked, likesCount, likes } = data;
+    // Broadcast to all connected users
+    io.emit('post:likeUpdate', {
+      postId,
+      userId,
+      liked,
+      likesCount,
+      likes
+    });
+    console.log(`Post like update broadcasted for post ${postId}`);
+  });
+
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id, 'User ID:', socket.userId);
   });

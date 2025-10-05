@@ -55,6 +55,10 @@ export const postsAPI = {
   getUserPosts: (userId) => API.get(`/posts/user/${userId}`),
   updatePost: (postId, data) => API.put(`/posts/${postId}`, data),
   deletePost: (postId) => API.delete(`/posts/${postId}`),
+  toggleLike: (postId) => API.post(`/posts/${postId}/like`),
+  getPostLikes: (postId) => API.get(`/posts/${postId}/likes`),
+  addComment: (postId, text) => API.post(`/posts/${postId}/comments`, { text }),
+  getPostComments: (postId) => API.get(`/posts/${postId}/comments`),
 };
 
 // Community API functions

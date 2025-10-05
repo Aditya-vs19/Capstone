@@ -17,6 +17,7 @@ export default function CommunitiesPage() {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
+  const [joiningCommunity, setJoiningCommunity] = useState(null);
   const messagesEndRef = React.useRef(null);
 
   // Load communities on component mount
@@ -24,6 +25,8 @@ export default function CommunitiesPage() {
     loadCommunities();
     loadCurrentUser();
   }, []);
+
+  // No need for additional useEffect - state updates handle everything
 
   // Initialize socket connection
   useEffect(() => {
@@ -130,53 +133,48 @@ export default function CommunitiesPage() {
     }
   };
 
+  // Removed refreshCommunityData - not needed with proper state management
+
   const handleToggle = async (community) => {
     if (!currentUser) {
       alert('Please wait while we load your profile...');
       return;
     }
     
+    // Prevent multiple clicks
+    if (joiningCommunity === community._id) {
+      return;
+    }
+    
     try {
+      setJoiningCommunity(community._id);
       console.log('Joining/leaving community:', community._id, 'Current user:', currentUser._id);
+      
       const response = await communitiesAPI.joinCommunity(community._id);
       console.log('Join/leave response:', response.data);
       
-      if (response.data.joined) {
-        // User joined - update local state and emit socket event
-        setCommunities(prev => prev.map(c => 
-          c._id === community._id 
-            ? { ...c, members: [...c.members, currentUser._id] }
-            : c
-        ));
-        
-        // Emit socket event for cross-tab sync
-        socketService.emitMemberUpdate(community._id, {
-          membersCount: response.data.membersCount,
-          members: response.data.members
-        });
-        
-        console.log('Updated communities state after join');
-        alert('Successfully joined the community!');
-      } else {
-        // User left - update local state and emit socket event
-        setCommunities(prev => prev.map(c => 
-          c._id === community._id 
-            ? { ...c, members: c.members.filter(memberId => memberId !== currentUser._id) }
-            : c
-        ));
-        
-        // Emit socket event for cross-tab sync
-        socketService.emitMemberUpdate(community._id, {
-          membersCount: response.data.membersCount,
-          members: response.data.members
-        });
-        
-        console.log('Updated communities state after leave');
-        alert('Successfully left the community!');
-      }
+      // Update local state immediately with server response
+      setCommunities(prev => prev.map(c => 
+        c._id === community._id 
+          ? { 
+              ...c, 
+              members: response.data.members,
+              // Ensure we have the updated member count
+              ...(response.data.membersCount && { memberCount: response.data.membersCount })
+            }
+          : c
+      ));
+      
+      console.log('Updated communities state:', response.data.joined ? 'joined' : 'left');
+      console.log('New members array:', response.data.members);
+      console.log('Current user ID:', currentUser._id);
+      console.log('Is user in members?', response.data.members.includes(currentUser._id));
+      
     } catch (error) {
       console.error('Error toggling community membership:', error);
       alert('Error joining/leaving community. Please try again.');
+    } finally {
+      setJoiningCommunity(null);
     }
   };
 
@@ -246,25 +244,21 @@ export default function CommunitiesPage() {
   };
 
   const isMember = (community) => {
-    if (!currentUser || !community.members || community.members.length === 0) {
-      console.log('isMember: No currentUser or members', { currentUser, members: community.members });
+    if (!currentUser || !community.members) {
+      return false;
+    }
+    
+    // Handle empty members array
+    if (community.members.length === 0) {
       return false;
     }
     
     const isAMember = community.members.some(member => {
       // Handle both populated user objects and user IDs
       const memberId = typeof member === 'object' ? member._id : member;
-      const isMember = memberId === currentUser._id;
-      console.log('Checking member:', { memberId, currentUserId: currentUser._id, isMember });
-      return isMember;
+      return memberId === currentUser._id;
     });
     
-    console.log('isMember final result:', { 
-      communityId: community._id, 
-      members: community.members, 
-      currentUserId: currentUser._id, 
-      isAMember 
-    });
     return isAMember;
   };
 
@@ -476,13 +470,18 @@ export default function CommunitiesPage() {
               </div>
               <div className="community-actions">
                 <button 
-                  className={`community-btn${isMember(community) ? ' leave' : ''}`} 
+                  className={`community-btn${isMember(community) ? ' leave' : ''}${joiningCommunity === community._id ? ' loading' : ''}`} 
                   onClick={(e) => {
                     e.stopPropagation();
                     handleToggle(community);
                   }}
+                  disabled={joiningCommunity === community._id}
                 >
-                  {isMember(community) ? 'Leave' : 'Join'}
+                  {joiningCommunity === community._id ? (
+                    <span>Processing...</span>
+                  ) : (
+                    isMember(community) ? 'Leave' : 'Join'
+                  )}
                 </button>
                 {isMember(community) && (
                   <button 

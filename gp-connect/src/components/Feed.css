@@ -139,6 +139,28 @@ body {
   margin: 0.5rem 0;
 }
 
+.liked-by {
+  margin-top: 0.3rem;
+  font-size: 0.85rem;
+  color: #aaa;
+}
+
+.liked-user {
+  color: #007bff;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.liked-user:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}
+
+.more-likes {
+  color: #888;
+  font-style: italic;
+}
+
 .comments-section {
   margin: 1rem 0;
   padding: 1rem 0;
