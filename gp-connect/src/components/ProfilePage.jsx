@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { FaUser, FaEdit, FaCog, FaArrowLeft, FaEnvelope, FaGraduationCap, FaBuilding, FaCalendarAlt, FaSave, FaTimes } from 'react-icons/fa';
-import { profileAPI, postsAPI } from '../services/api';
+import { FaUser, FaEdit, FaCog, FaArrowLeft, FaEnvelope, FaGraduationCap, FaBuilding, FaCalendarAlt, FaSave, FaTimes, FaMessage } from 'react-icons/fa';
+import { profileAPI, postsAPI, messagesAPI } from '../services/api';
 import { getProfilePicUrl, getPostImageUrl, handleImageError } from '../utils/imageUtils.js';
 import './ProfilePage.css';
 
@@ -26,6 +26,7 @@ const ProfilePage = ({ userProfile, onBackToHome, onNavigateToSettings, isMobile
   });
   const [isFollowing, setIsFollowing] = useState(false);
   const [isFollowLoading, setIsFollowLoading] = useState(false);
+  const [isMessaging, setIsMessaging] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -173,6 +174,24 @@ const ProfilePage = ({ userProfile, onBackToHome, onNavigateToSettings, isMobile
     }
   };
 
+  const handleStartMessage = async () => {
+    if (isOwnProfile || !userProfile) return;
+    
+    setIsMessaging(true);
+    try {
+      const response = await messagesAPI.getOrCreateConversation(userProfile._id);
+      // Open messages panel with the conversation
+      // This would need to be passed up to HomePage to open the messages panel
+      console.log('Conversation created/retrieved:', response.data);
+      setMessage({ type: 'success', text: 'Conversation started! Check your messages.' });
+    } catch (error) {
+      console.error('Error starting conversation:', error);
+      setMessage({ type: 'error', text: 'Failed to start conversation. Please try again.' });
+    } finally {
+      setIsMessaging(false);
+    }
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -286,13 +305,24 @@ const ProfilePage = ({ userProfile, onBackToHome, onNavigateToSettings, isMobile
               </button>
             )}
             {!isOwnProfile && userProfile && (
-              <button 
-                className={`follow-profile-btn ${isFollowing ? 'following' : 'follow'}`}
-                onClick={handleFollowToggle}
-                disabled={isFollowLoading}
-              >
-                {isFollowLoading ? 'Updating...' : (isFollowing ? 'Following' : 'Follow')}
-              </button>
+              <>
+                <button 
+                  className={`follow-profile-btn ${isFollowing ? 'following' : 'follow'}`}
+                  onClick={handleFollowToggle}
+                  disabled={isFollowLoading}
+                >
+                  {isFollowLoading ? 'Updating...' : (isFollowing ? 'Following' : 'Follow')}
+                </button>
+                <button 
+                  className="message-profile-btn"
+                  onClick={handleStartMessage}
+                  disabled={isMessaging}
+                  title="Send Message"
+                >
+                  <FaMessage />
+                  {isMessaging ? 'Starting...' : 'Message'}
+                </button>
+              </>
             )}
           </div>
 

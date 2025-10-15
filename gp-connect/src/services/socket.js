@@ -88,6 +88,67 @@ class SocketService {
     }
   }
 
+  // Direct messaging socket methods
+  joinConversation(conversationId) {
+    if (this.socket) {
+      this.socket.emit('joinConversation', { conversationId });
+    }
+  }
+
+  leaveConversation(conversationId) {
+    if (this.socket) {
+      this.socket.emit('leaveConversation', { conversationId });
+    }
+  }
+
+  onDirectMessage(callback) {
+    if (this.socket) {
+      this.socket.on('message:new', callback);
+    }
+  }
+
+  offDirectMessage(callback) {
+    if (this.socket) {
+      this.socket.off('message:new', callback);
+    }
+  }
+
+  onTypingStart(callback) {
+    if (this.socket) {
+      this.socket.on('typing:start', callback);
+    }
+  }
+
+  offTypingStart(callback) {
+    if (this.socket) {
+      this.socket.off('typing:start', callback);
+    }
+  }
+
+  onTypingStop(callback) {
+    if (this.socket) {
+      this.socket.on('typing:stop', callback);
+    }
+  }
+
+  offTypingStop(callback) {
+    if (this.socket) {
+      this.socket.off('typing:stop', callback);
+    }
+  }
+
+  startTyping(conversationId) {
+    if (this.socket) {
+      this.socket.emit('typing:start', { conversationId });
+    }
+  }
+
+  stopTyping(conversationId) {
+    if (this.socket) {
+      this.socket.emit('typing:stop', { conversationId });
+    }
+  }
+
   // Post like functionality
   onPostLikeUpdate(callback) {
     if (this.socket) {

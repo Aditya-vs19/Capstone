@@ -518,6 +518,40 @@
   box-shadow: none;
 }
 
+/* Message Button Styles */
+.message-profile-btn {
+  background: linear-gradient(135deg, #a2fd05 0%, #7dd3fc 100%);
+  color: #000;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+  margin-left: 1rem;
+  min-width: 120px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.message-profile-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(162, 253, 5, 0.4);
+}
+
+.message-profile-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.message-profile-btn:disabled:hover {
+  box-shadow: none;
+}
+
 /* Profile Subtitle */
 .profile-subtitle {
   font-size: 14px;

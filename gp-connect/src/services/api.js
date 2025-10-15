@@ -71,7 +71,13 @@ export const communitiesAPI = {
 };
 
 export const messagesAPI = {
-  getConversations: () => API.get('/messages/conversations/'),
+  getConversations: () => API.get('/messages/conversations'),
+  getOrCreateConversation: (otherUserId) => API.get(`/messages/conversation/${otherUserId}`),
+  getMessages: (conversationId, page = 1, limit = 50) => API.get(`/messages/conversation/${conversationId}/messages?page=${page}&limit=${limit}`),
+  sendMessage: (conversationId, content, messageType = 'text') => API.post(`/messages/conversation/${conversationId}/message`, { content, messageType }),
+  markAsRead: (conversationId) => API.put(`/messages/conversation/${conversationId}/read`),
+  deleteMessage: (messageId) => API.delete(`/messages/message/${messageId}`),
+  getUnreadCount: () => API.get('/messages/unread-count'),
 };
 
 export const notificationsAPI = {

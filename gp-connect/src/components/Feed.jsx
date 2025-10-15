@@ -6,10 +6,14 @@ import socketService from '../services/socket.js';
 
 export const getFeeds = async () => {
   try {
+    console.log('Calling postsAPI.getPosts()...');
     const response = await postsAPI.getPosts();
+    console.log('Posts API response:', response);
+    console.log('Posts data:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error fetching feeds:', error);
+    console.error('Error details:', error.response?.data);
     return [];
   }
 };
@@ -41,11 +45,13 @@ export default function Feed({ onNavigateToProfile }) {
         
         // Fetch posts
         const fetchedPosts = await getFeeds();
+        console.log('Fetched posts:', fetchedPosts);
+        console.log('Number of posts:', fetchedPosts.length);
         setPosts(fetchedPosts);
         
         // Initialize post states for each post with real data
         const initialStates = {};
-        const currentUserId = currentUser?._id;
+        const currentUserId = currentUserData?.user?._id;
         fetchedPosts.forEach(post => {
           // Check if current user has liked this post
           const isLiked = currentUserId && post.likes && post.likes.some(like => {

@@ -9,6 +9,7 @@ import authRoutes from './routes/authRoutes.js';
 import postRoutes from './routes/postRoutes.js';
 import profileRoutes from './routes/profileRoutes.js';
 import communityRoutes from './routes/communityRoutes.js';
+import messageRoutes from './routes/messageRoutes.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -43,6 +44,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/community', communityRoutes);
+app.use('/api/messages', messageRoutes);
 
 // Socket.IO connection handling with JWT authentication
 io.use(async (socket, next) => {
@@ -67,6 +69,9 @@ io.use(async (socket, next) => {
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id, 'User ID:', socket.userId);
 
+  // Join user's personal room for direct messages
+  socket.join(`user_${socket.userId}`);
+
   // Join community room
   socket.on('joinCommunity', (data) => {
     const { communityId } = data;
@@ -79,6 +84,37 @@ io.on('connection', (socket) => {
     const { communityId } = data;
     socket.leave(`community_${communityId}`);
     console.log(`User ${socket.userId} left community ${communityId}`);
+  });
+
+  // Join conversation room for real-time messaging
+  socket.on('joinConversation', (data) => {
+    const { conversationId } = data;
+    socket.join(`conversation_${conversationId}`);
+    console.log(`User ${socket.userId} joined conversation ${conversationId}`);
+  });
+
+  // Leave conversation room
+  socket.on('leaveConversation', (data) => {
+    const { conversationId } = data;
+    socket.leave(`conversation_${conversationId}`);
+    console.log(`User ${socket.userId} left conversation ${conversationId}`);
+  });
+
+  // Handle typing indicators
+  socket.on('typing:start', (data) => {
+    const { conversationId } = data;
+    socket.to(`conversation_${conversationId}`).emit('typing:start', {
+      userId: socket.userId,
+      conversationId
+    });
+  });
+
+  socket.on('typing:stop', (data) => {
+    const { conversationId } = data;
+    socket.to(`conversation_${conversationId}`).emit('typing:stop', {
+      userId: socket.userId,
+      conversationId
+    });
   });
 
   // Handle post like updates

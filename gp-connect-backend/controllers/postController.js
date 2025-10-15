@@ -56,17 +56,25 @@ const createPost = asyncHandler(async (req, res) => {
 // @route   GET /api/posts
 // @access  Private
 const getPosts = asyncHandler(async (req, res) => {
+  console.log('getPosts called for user:', req.user._id);
+  
   // Get current user with following list
   const currentUser = await User.findById(req.user._id).select('following');
+  console.log('Current user following:', currentUser.following);
   
   // Create array of user IDs to fetch posts from (current user + followed users)
   const userIdsToFetch = [req.user._id, ...currentUser.following];
+  console.log('User IDs to fetch posts from:', userIdsToFetch);
   
   const posts = await Post.find({ userId: { $in: userIdsToFetch } })
     .sort({ createdAt: -1 })
     .populate('userId', 'fullName profilePic enrollment')
     .populate('likes', 'fullName profilePic')
     .populate('comments.user', 'fullName profilePic');
+  
+  console.log('Found posts:', posts.length);
+  console.log('Posts:', posts.map(p => ({ id: p._id, userId: p.userId, caption: p.caption })));
+  
   res.json(posts);
 });
 
